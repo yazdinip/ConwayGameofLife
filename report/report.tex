@@ -1,0 +1,300 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx}
+\usepackage{paralist}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hhline}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xmpmulti}
+\usepackage{animate}
+\usepackage{multicol}
+
+\oddsidemargin 0mm
+\evensidemargin 0mm
+\textwidth 160mm
+\textheight 200mm
+\renewcommand\baselinestretch{1.0}
+
+\pagestyle {plain}
+\pagenumbering{arabic}
+
+\newcounter{stepnum}
+
+%% Comments
+
+\usepackage{color}
+
+\newif\ifcomments\commentstrue
+
+\ifcomments
+\newcommand{\authornote}[3]{\textcolor{#1}{[#3 ---#2]}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\else
+\newcommand{\authornote}[3]{}
+\newcommand{\todo}[1]{}
+\fi
+
+\newcommand{\wss}[1]{\authornote{blue}{SS}{#1}}
+
+\title{Assignment 4 Specification}
+\author{SFWR ENG 2AA4}
+
+\begin {document}
+
+\maketitle
+
+\noindent This Module Interface Specification (MIS) document contains modules, types and methods for implementing the game state of the Conway's Game of Life which is a cellular automaton devised by the British mathematician John Horton Conway in 1970. The game is a zero-player game, meaning that its evolution is determined by its initial state, requiring no further input. One interacts with the Game of Life by creating an initial configuration and observing how the game moves from one state to another. There are a set of rules that can take the game from one state to another, by determining the future state of a single cell based on its current state of the neighbours. Every cell interacts with its eight neighbours, which are the cells that are horizontally, vertically, or diagonally adjacent. At each step in time, the following transitions occur:
+\begin{itemize}
+\item Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+\item Any live cell with two or three live neighbours lives on to the next generation.
+\item Any live cell with more than three live neighbours dies, as if by overpopulation.
+\item Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+\end{itemize}
+In this document we will use True or False to represent the state of each cell based on being 'Alive' or 'Dead'. 
+%In the following animation we see a single Gosper's glider gun creating "gliders", vividly visualizing the concept of the game. 
+%\begin{frame}{Embedded Animation}
+%  \animategraphics[loop,controls,width=\linewidth]{10}{something-}{0}{29}
+%\end{frame}
+
+\newpage
+
+\section* {Game of Life Module}
+
+\subsection*{Template Module}
+
+GameState
+
+\subsection* {Uses}
+
+None
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+BoardEdgeSize = 12 \textit{\#size of the board in each direction including the Edge}\\
+BoardSize = 10 \textit{\#size of the board in each direction excluding the Edge} 
+
+\subsubsection* {Exported Types}
+
+CellT = \{Alive, Dead\}
+
+
+\subsubsection* {Exported Access Programs}
+\begin{tabular}{| l | l | l | l |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+new StateT &  &  &\\
+\hline
+getStatus & $\mathbb{N}$, $\mathbb{N}$ & $\mathbb{B}$ & out\_of\_range\\
+\hline
+changeStatus & CellT, $\mathbb{N}$, $\mathbb{N}$ & $\mathbb{B}$ & out\_of\_range\\
+\hline
+count & CellT & $\mathbb{N}$ & \\
+\hline
+updateGame & & & invalid\_argument\\
+\hline
+is\_there\_change	& & $\mathbb{B}$ &\\
+\hline
+gameReset & & & \\
+\hline
+\end{tabular}
+
+\subsection* {Semantics}
+
+\subsubsection* {State Variables}
+
+$S$: GameStateT
+
+\subsubsection* {State Invariant}
+
+Alive = True\\
+Dead = False\\
+$count(Dead) + count(Alive) = BoardSize \times BoardSize$
+
+\subsubsection* {Assumptions \& Design Decisions}
+
+\begin{itemize}
+\item The StateT constructor is called before any other access
+  routine is called on that instance. Once a StateT has been created, the
+  constructor will not be called on it again.
+\item Indexing in the game starts from 1, eg. to retrieve the status of the first Cell in the game, we would need to call \text{getStatus}(1,1). 
+\item For bettter portablility, instead of a single constructor that reads the initial congifuration from a text file, the current desgin takes advantage of a defualt constructor. Another module, has been desgined to read the initial configuration from a file. This further improves the property of separation of concerns as the client does not have to worry about changing the initial text file to change the start state. 
+\item For better scalability, this module is specified as an Abstract Data Type
+  (ADT) instead of an Abstract Object. This would allow multiple games to be
+  created and tracked at once by a client.
+\item At the start of the game all the cells are set to be Dead. In addition, the is\_there\_change() function looks if two consecutive GameStates are the same. However, the function does not permanently update the game, only temproray to check if each state would remain the same. 
+\item The GameState edges are all set to Dead as well, this is achieved through creating a GameState that is one Cell bigger than the GameState showed in the view function in every direction. Eg. Model GameState will have size of 7 while View GameState will have size of 5. To improve the information hiding in the module, the Edge Cells can never be accessed or modified and always remain Dead. 
+\item The client is not allowed to directly access the game, only through the getStatus accessor as it breaks the essentiality quality of the program. Although outside of the scope of this assignment, but a additional module can be desgined which given a StateT can return the GameState as a two-dimensional sequence holder. 
+\end{itemize}
+
+\subsubsection* {Access Routine Semantics}
+\noindent StateT():
+\begin{itemize}
+\item transition: $S := \mbox{init\_2d}(\mbox{BoardEdgeSize}, Dead)$
+\item output : $\mathit{out} := self$ 
+\item exception: None
+\end{itemize}
+\noindent getStatus(i, j):
+\begin{itemize}
+\item output: $\mathit{out} := S[i][j]$
+\item exception: $exc := (\mbox{invalidPos}(i, j) \Rightarrow \mbox{out\_of\_range})$
+\end{itemize}
+\noindent changeStatus(c, i, j):
+\begin{itemize}
+\item transition: $\mathit{S[i][j]} := c$
+\item exception:  $exc := (\mbox{invalidPos}(i, j) \Rightarrow \mbox{out\_of\_range})$
+\end{itemize}
+
+\noindent count(c):
+\begin{itemize}
+\item output: $\mathit{out} :=+(i, j: \mathbb{N} | \neg \mbox{invalidPos}(i, j) \wedge S[i][j] = c : 1 )$
+\item exception: None
+\end{itemize}
+\noindent updateGame():
+\begin{itemize}
+\item transition: $S := S^\prime \mbox{ such that } \forall ( i, j :\mathbb{N} | \neg \mbox{invalidPos}(i, j) : S^\prime[i][j] = \mbox{updateCell}(i, j, S))$
+\item exception: $exc := (\neg \mbox{init\_check}() \Rightarrow \mbox{invalid\_argument})$
+\end{itemize}
+\noindent is\_there\_change():
+\begin{itemize}
+\item output:  $\mathit{out} :=\forall (i, j : \mathbb{N} | \neg \mbox{invalidPos}(i, j) : S.\mbox{updateGame}()[i][j] = S[i][j])$
+\item exception: None
+\end{itemize}
+\noindent gameReset():
+\begin{itemize}
+\item transition:  $S := \mbox{init\_2d}(\mbox{BoardEdgeSize}, Dead)$
+\item exception: None
+\end{itemize}
+\subsubsection* {Local Types}
+
+GameStateT = sequence [BoardEdgeSize, BoardEdgeSize] of cellT
+
+\subsection*{Local Functions}
+
+
+\noindent countAliveNeighbour: $ \mathbb{N} \times \mathbb{N} \times \mbox{GameStateT} \rightarrow \mathbb{N}$\\
+\noindent countAliveNeighbour (tempGame, i, j) $\equiv\\ 
++(i, j: \mathbb{N} | \neg \mbox{invalidPos}(i, j) \wedge (tempGame[i][j+1] = Alive  \vee tempGame[i][j-1] = Alive  \vee tempGame[i+1][j+1] = Alive \vee tempGame[i+1][j] = Alive \vee tempGame[i+1][j-1] = Alive \vee tempGame[i-1][j+1] = Alive \vee tempGame[i-1][j] = Alive \vee tempGame[i-1][j-1] = Alive) : 1 )$\\
+
+\noindent updateCell: $\mathbb{N} \times \mathbb{N} \times \mbox{GameStateT} \rightarrow \mathbb{B} $\\
+\noindent updateCell (i, j, tempGame) $\equiv$ 
+\begin{table}[h]
+\begin{tabular}{|l|l|l|}
+\hline
+\multirow{4}{*}{tempGame{[}i{]}{[}j{]} = Alive} & countAliveNeighbour(i, j, tempGame) \textless 2    & Dead  \\ \cline{2-3} 
+                                                & countAliveNeighbour(i, j, tempGame) = 2            & Alive \\ \cline{2-3} 
+                                                & countAliveNeighbour(i, j, tempGame) = 3            & Alive \\ \cline{2-3} 
+                                                & countAliveNeighbour(i, j, tempGame) \textgreater 3 & Dead  \\ \hline
+tempGame{[}i{]}{[}j{]} = Dead                   & countAliveNeighbour(i, j, tempGame) = 3            & Alive \\ \hline
+\end{tabular}
+\end{table}\\\\
+
+\noindent init\_check: $\text{StateT} \rightarrow \mathbb{B}$\\
+\noindent init\_check($tempState$) $\equiv \mbox{count}(Dead) + \mbox{count}(Alive) = \mbox{BoardSize} \times \mbox{BoardSize}$\\
+
+\noindent getBoard: $\text{void} \rightarrow \mbox{GameStateT}$\\
+\noindent getBoard() $\equiv S $\\
+
+\noindent init\_2d: $\mathbb{N} \times \text{CellT} \rightarrow \mbox{GameStateT}$\\
+\noindent init\_2d($n, c$) $\equiv s \text{ such that } (|s| = n \land (\forall\, i
+\in [0..n-1] : s[i] = (c_{n-1}, c_{n-2}, c_{n-3},...,c_{n-n}))$\\
+
+\noindent  invalidPos : $\mathbb{N} \times \mathbb{N} \rightarrow \mathbb{B}$\\
+\noindent invalidPos($i, j$) $\equiv \neg(1 \le i \wedge i \le \mbox{BoardSize}) \vee \neg(1 \le j \wedge j \le \mbox{BoardSize})$\\
+
+
+\newpage
+
+\section* {View Module}
+
+\subsection* {Module}
+
+View
+
+\subsection* {Uses}
+
+GameState
+
+\subsection* {Syntax}
+
+\subsubsection* {Exported Constants}
+
+None
+
+\subsubsection* {Exported Access Programs}
+
+\begin{tabular}{| l | l | l | l |}
+\hline
+\textbf{Routine name} & \textbf{In} & \textbf{Out} & \textbf{Exceptions}\\
+\hline
+initialConfigRead & \mbox{String}, \mbox{StateT} & \mbox{StateT} & ~\\
+\hline
+outputGameTerminal & $ \mbox{StateT}$ & ~ & ~\\
+\hline
+outputGameText & $\mbox{String}, \mbox{StateT}$ & ~ & ~\\
+\hline
+\end{tabular}
+
+\subsection* {Semantics}
+
+\subsubsection* {Environment Variables}
+
+read\_input\_config: Text file including the input config\\
+write\_final\_config: Text file used to export the output config
+
+\subsubsection* {State Variables}
+
+None
+
+\subsubsection* {State Invariant}
+
+None
+
+\subsubsection* {Assumptions}
+\begin{itemize}
+\item The input file will match the given specification. 
+\item This module will not be explicitly tested. Nevertheless, each method in the module was tested by simply looking if the outputted game looks how it's supposed to look like. The outputGameText and readInitialCongif methods have also been tested together by using the output of outputGameText as the input of readInitialConfig which worked as it should. 
+\end{itemize}
+\subsubsection* {Access Routine Semantics}
+
+\noindent readInitialConfig($filename, tempGame$)
+\begin{itemize}
+\item transition: read data from the file read\_input\_config associated with the string filnename.
+  Use this data to update the state of the GameState module. Read will first initialize an object file of class StateT which has all the data to be initially set to be dead. Then, the Ascii Gui will be read character by character from the text file, and put into the GameStateT of the object file created. The newly initialized object file is then returned, allowing the client to work on it after it has been initialized from the text file. 
+
+  The text file has the following format, where 'X' represents an Alive cell and '.' represents a Dead cell. The Ascii gui is then made up of the two symbols (X, .) in the form of a square with each side equal to BoardSize constant, counting the number of symbols. 
+ Rows are separated by a new line.  The data shown below is for a constant BoardSize of 5 where the cells (3,2), (3,3), (3,4) are Alive.
+
+  \begin{equation}
+\begin{array}{ccccc}
+\arraycolsep=1.0pt\def\arraystretch{0.5}
+. & . & . & . & .\\
+. & . & . & . & .\\
+. & \textit{X}& \textit{X} & \textit{X} & .\\
+. & . & . & . & .\\
+. & . & . & . & .\\
+\end{array}
+  \end{equation}
+
+\item exception: None
+\end{itemize}
+
+\noindent outputGameText($tempState$)
+\begin{itemize}
+\item transition: The function is given an object of class StateT which potentiall includes Alive states or could be all Dead cells. The function goes through the sequence of cells making our GameStateT in which prints symbol 'X' as Alive and symbol '.' as Dead to a newly created text file associated with the string s. The output result will be very similar to the format showd in figure (1) as it might include different Alive and Dead cells.
+\item exception: None
+
+\end{itemize}\noindent outputGameTerminal($filename, tempState$)
+\begin{itemize}
+\item transition: The function is given an object of class StateT which potentiall includes Alive states or could be all Dead cells. The function goes through the sequence of cells making our GameStateT in which prints symbol 'X' as Alive and symbol '.' as Dead to the terminal. The output result will be very similar to the format showd in figure (1) as it might include different Alive and Dead cells.
+\item exception: None
+\end{itemize}
+\newpage
+\section* {Critique of Design}
+
+Using the current design the edges of the viewable GameState are all updated considering the unviewable cells as Dead. This is done through use of a two dimensional vector where all the elements starting from index 1 can be accessed. This means that our inital graph will be made of seven by seven vector while we can only access, change and update the five by five  inner GameState in the bigger vector. Then using information hiding we can disable the client to change or access any of the cells outside of the viewable game. Although this design works perfectly when given a pattern, it does not work well when the changing shape partially goes off of the screen since although they might be Alive, since they are off the screen they are counted as Dead. This can be done using a large enough defualt board which can be zoomed in and out, instead of changing the intial size of the board. This would allow for far better user interface while keeping our pragram in tune for portability and scalibilty problems. 
+\enddocument 
