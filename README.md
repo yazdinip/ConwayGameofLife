@@ -12,25 +12,26 @@ This project only provides the back-end processing and the framework for the gam
 
 Next steps would include linking the back-end to a front-end GUI library where we can continously see each state of the game. 
 
-Sample Input: 
-..... <br />
-..... <br />
-.XXX. <br />
-..... <br />
-..... <br />
+Sample Input: <br />
+`.....` <br />
+`.....` <br />
+`.XXX.` <br />
+`.....` <br />
+`.....` <br />
 
-Sample Output (1st Iteration):
-.....
-..X..
-..X..
-..X..
-.....
+Sample Output (1st Iteration): <br />
+`.....` <br />
+`..X..` <br />
+`..X..` <br />
+`..X..` <br />
+`.....` <br />
 
-Sample Output (2nd Iteration):
-.....
-.....
-.XXX.
-.....
-.....
+Sample Output (2nd Iteration): <br />
+`.....` <br />
+`.....` <br />
+`.XXX.` <br />
+`.....` <br />
+`.....` <br />
+
 
 
