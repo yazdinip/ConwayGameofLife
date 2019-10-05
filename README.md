@@ -13,11 +13,11 @@ This project only provides the back-end processing and the framework for the gam
 Next steps would include linking the back-end to a front-end GUI library where we can continously see each state of the game. 
 
 Sample Input: 
- `.....
-  .....
-  .XXX.
-  .....
-  .....`
+..... <br />
+..... <br />
+.XXX. <br />
+..... <br />
+..... <br />
 
 Sample Output (1st Iteration):
 .....
